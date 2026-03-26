@@ -1,9 +1,9 @@
-//? if neoforge {
+package net.notcoded.wayfix.platforms.neoforge;//? if neoforge {
 /*package net.notcoded.wayfix.platforms.neoforge;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.toast.SystemToast;
+import net.minecraft.text.Text;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLConfig;
 import net.neoforged.fml.ModLoadingContext;
@@ -38,9 +38,9 @@ public class WayFixNeoForge {
         FMLConfig.updateConfig(FMLConfig.ConfigValue.EARLY_WINDOW_CONTROL, false);
 
         try {
-            Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastId.WORLD_BACKUP,
-                    Component.translatable("wayfix.toast.restart-game.title"),
-                    Component.translatable("wayfix.toast.restart-game.description"))
+            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                    Text.translatable("wayfix.toast.restart-game.title"),
+                    Text.translatable("wayfix.toast.restart-game.description"))
             );
         } catch (Exception | Error ignored) {
             WayFix.LOGGER.warn("Restart your game! The early loading screen has been disabled.");
@@ -62,7 +62,6 @@ public class WayFixNeoForge {
         @Override
         public boolean isDevelopmentEnvironment() {
             return !FMLLoader.isProduction();
-//            return true;
         }
     }
 }

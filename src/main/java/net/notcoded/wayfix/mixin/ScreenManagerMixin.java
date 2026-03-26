@@ -1,8 +1,8 @@
 package net.notcoded.wayfix.mixin;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import net.minecraft.client.util.Monitor;
-import net.minecraft.client.util.MonitorTracker;
+import com.mojang.blaze3d.platform.Monitor;
+import com.mojang.blaze3d.platform.ScreenManager;
 import net.notcoded.wayfix.config.ModClothConfig;
 import net.notcoded.wayfix.util.WindowHelper;
 import org.lwjgl.glfw.GLFW;
@@ -14,18 +14,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MonitorTracker.class)
-public class MonitorTrackerMixin {
-    @Shadow @Final private Long2ObjectMap<Monitor> pointerToMonitorMap;
+@Mixin(ScreenManager.class)
+public class ScreenManagerMixin {
+    @Shadow @Final private Long2ObjectMap<Monitor> monitors;
 
-    @Inject(method = {"handleMonitorEvent", "<init>"}, at = @At("RETURN"))
+    @Inject(method = {"onMonitorChange", "<init>"}, at = @At("RETURN"))
     private void handleConfigAdditions(CallbackInfo ci) {
         if(!WindowHelper.canUseWindowHelper()) this.wayfix$refreshMonitors();
     }
 
     @Unique
     private void wayfix$refreshMonitors() {
-        this.pointerToMonitorMap.forEach((aLong, monitor1) ->
+        this.monitors.forEach((aLong, monitor1) ->
                 ModClothConfig.monitors.put(GLFW.glfwGetMonitorName(aLong), aLong)
         );
     }

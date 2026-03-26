@@ -1,81 +1,136 @@
+import java.util.*
+
 plugins {
     id("dev.architectury.loom")
     id("architectury-plugin")
     id("me.modmuss50.mod-publish-plugin")
-    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow")
 }
 
 val minecraft = stonecutter.current.version
 val loader = loom.platform.get().name.lowercase()
 
-version = "${mod.version}+${mod.prop("version_name")}-$loader"
+version = "${mod.version}+$minecraft"
 group = mod.group
 base {
-    archivesName.set(mod.id)
+    archivesName.set("${mod.id}-$loader")
 }
-
-val isFabric = loader == "fabric"
-val isForge = loader == "forge"
-val isNeoForge = loader == "neoforge"
-
-stonecutter.const("fabric", isFabric)
-stonecutter.const("forge", isForge)
-stonecutter.const("neoforge", isNeoForge)
 
 architectury.common(stonecutter.tree.branches.mapNotNull {
     if (stonecutter.current.project !in it) null
     else it.prop("loom.platform")
 })
 repositories {
+    maven("https://maven.neoforged.net/releases/")
+
+    //modmenu
+    maven("https://maven.terraformersmc.com/")
+    //placeholder api (modmenu depencency)
+    maven("https://maven.nucleoid.xyz/")
+
     maven("https://maven.shedaniel.me/")
-    maven("https://maven.terraformersmc.com/releases/")
-    maven("https://maven.neoforged.net/releases")
-    maven("https://maven.minecraftforge.net")
 
 }
 dependencies {
     minecraft("com.mojang:minecraft:$minecraft")
+    mappings(loom.officialMojangMappings())
 
-    if(isFabric || isForge) {
-        mappings("net.fabricmc:yarn:$minecraft+build.${mod.dep("yarn_build")}:v2")
-    }
-
-    modImplementation("me.shedaniel.cloth:cloth-config-${loader}:${mod.dep("cloth_config_version")}")
-    implementation("org.lwjgl:lwjgl-glfw:3.3.2")
-
-    if (isFabric) {
+    if (loader == "fabric") {
         modImplementation("net.fabricmc:fabric-loader:${mod.dep("fabric_loader")}")
+//        mappings("net.fabricmc:yarn:$minecraft+build.${mod.dep("yarn_build")}:v2")
         modImplementation("com.terraformersmc:modmenu:${mod.dep("mod_menu_version")}")
+
+        //some features (like automatic resource loading from non vanilla namespaces) work only with fabric API installed
+        //for example translations from assets/modid/lang/en_us.json won't be working, same stuff with textures
+        //but we keep runtime only to not accidentally depend on fabric's api, because it doesn't exist in neo/forge
+//        modRuntimeOnly("net.fabricmc.fabric-api:fabric-api:${mod.dep("fabric_version")}")
+
     }
-    if (isForge) {
+//    modImplementation("me.shedaniel.cloth:cloth-config-${loader}:${mod.dep("cloth_config_version")}")
+    modImplementation("me.shedaniel.cloth:cloth-config-${loader}:14.0.139")
+    implementation("org.lwjgl:lwjgl-glfw:3.3.2")
+    if (loader == "forge") {
         "forge"("net.minecraftforge:forge:${minecraft}-${mod.dep("forge_loader")}")
+//        mappings("net.fabricmc:yarn:$minecraft+build.${mod.dep("yarn_build")}:v2")
+
+        "io.github.llamalad7:mixinextras-forge:${mod.dep("mixin_extras")}".let {
+            implementation(it)
+            include(it)
+        }
     }
-    if (isNeoForge) {
+    if (loader == "neoforge") {
         "neoForge"("net.neoforged:neoforge:${mod.dep("neoforge_loader")}")
-        mappings(loom.layered {
-            mappings("net.fabricmc:yarn:$minecraft+build.${mod.dep("yarn_build")}:v2")
-            mod.dep("neoforge_patch").takeUnless { it.startsWith('[') }?.let {
-                mappings("dev.architectury:yarn-mappings-patch-neoforge:$it")
-            }
-        })
+//        mappings(loom.layered {
+//            mappings("net.fabricmc:yarn:$minecraft+build.${mod.dep("yarn_build")}:v2")
+//            mod.dep("neoforge_patch").takeUnless { it.startsWith('[') }?.let {
+//                mappings("dev.architectury:yarn-mappings-patch-neoforge:$it")
+//            }
+//        })
+
     }
 }
 
 loom {
+    accessWidenerPath = rootProject.file("src/main/resources/wayfix.accesswidener")
+
     decompilers {
         get("vineflower").apply { // Adds names to lambdas - useful for mixins
             options.put("mark-corresponding-synthetics", "1")
         }
     }
-    if (isForge) {
-        forge.mixinConfig("wayfix.mixins.json")
+    if (loader == "forge") {
+        forge.mixinConfigs(
+            "wayfix.mixins.json"
+        )
+    }
+}
+
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+publishMods {
+    val modrinthToken = localProperties.getProperty("publish.modrinthToken", "")
+    val curseforgeToken = localProperties.getProperty("publish.curseforgeToken", "")
+
+
+    file = project.tasks.remapJar.get().archiveFile
+    dryRun = modrinthToken == null || curseforgeToken == null
+
+    displayName = "${mod.name} ${loader.replaceFirstChar { it.uppercase() }} ${property("mod.version_name")}-${mod.version}"
+    version = mod.version
+    changelog = rootProject.file("CHANGELOG.md").readText()
+    type = BETA
+
+    modLoaders.add(loader)
+
+    val targets = property("mod.mc_targets").toString().split(' ')
+    modrinth {
+        projectId = property("publish.modrinth").toString()
+        accessToken = modrinthToken
+        targets.forEach(minecraftVersions::add)
+        if (loader == "fabric") {
+            requires("fabric-api")
+            optional("modmenu")
+        }
+    }
+
+    curseforge {
+        projectId = property("publish.curseforge").toString()
+        accessToken = curseforgeToken.toString()
+        targets.forEach(minecraftVersions::add)
+        if (loader == "fabric") {
+            requires("fabric-api")
+            optional("modmenu")
+        }
     }
 }
 
 java {
     withSourcesJar()
-    val javaVersion = mod.dep("java")
-    val java = if (javaVersion == "8") JavaVersion.VERSION_1_8 else if(javaVersion == "17") JavaVersion.VERSION_17 else JavaVersion.VERSION_21
+    val java = if (stonecutter.eval(minecraft, ">=1.20.5")) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
     targetCompatibility = java
     sourceCompatibility = java
 }
@@ -128,72 +183,26 @@ tasks.processResources {
     val expandProps = mapOf(
         "version" to version,
         "minecraftVersion" to mod.prop("mc_dep"),
+
+
         "javaVersion" to mod.dep("java"),
         "cloth_config_separator" to clothConfigSeparator
     )
 
-    if (isFabric) {
+    if (loader=="fabric") {
         filesMatching("fabric.mod.json") { expand(expandProps) }
         exclude("META-INF/mods.toml", "META-INF/neoforge.mods.toml", "pack.mcmeta")
     }
 
-    if(isForge || isNeoForge) {
+    if(loader=="forge"||loader=="neoforge") {
         filesMatching("META-INF/*mods.toml") { expand(expandProps) }
         exclude("fabric.mod.json")
     }
 
     inputs.properties(expandProps)
-
 }
 
 tasks.build {
     group = "versioned"
     description = "Must run through 'chiseledBuild'"
-}
-
-publishMods {
-    version.set(project.version.toString())
-    displayName.set("${loader.upperCaseFirst()} | ${mod.prop("version_name")} [v${mod.version}]")
-    type = STABLE
-    file.set(tasks.remapJar.get().archiveFile)
-    val mcVersions = mod.prop("mc_targets").split(",")
-
-    changelog = rootProject.file("CHANGES.md").readText()
-    if(minecraft == "1.16.5" && isForge) changelog = changelog.get() + "\n\nNOTE: You must disable the early loading screen manually, this can be done by adding \"-Dfml.earlyprogresswindow=false\" to your java arguments or by installing the [No Early loading progress](https://www.curseforge.com/minecraft/mc-mods/no-early-loading-progress) mod."
-
-    modLoaders.add(loader)
-    if(isFabric) modLoaders.add("quilt")
-
-
-    modrinth {
-        accessToken = providers.environmentVariable("MODRINTH_API_KEY")
-
-        projectId = "hxIWsdEF"
-        minecraftVersions.addAll(mcVersions)
-
-        requires("cloth-config")
-        if(isFabric) optional("modmenu")
-    }
-
-    curseforge {
-        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-
-        projectId = "1224888"
-        minecraftVersions.addAll(mcVersions)
-
-        val javaVersion = mod.dep("java")
-        val java = if (javaVersion == "8") JavaVersion.VERSION_1_8 else if(javaVersion == "17") JavaVersion.VERSION_17 else JavaVersion.VERSION_21
-        javaVersions.add(java)
-
-        clientRequired = true
-        serverRequired = false
-
-        changelogType = "markdown"
-
-        requires("cloth-config")
-        if(isFabric) optional("modmenu")
-    }
-
-    //TODO: remove this when actually want to release
-    dryRun = true
 }

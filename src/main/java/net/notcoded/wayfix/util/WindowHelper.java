@@ -1,6 +1,6 @@
 package net.notcoded.wayfix.util;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.notcoded.wayfix.WayFix;
 import net.notcoded.wayfix.config.ModConfig;
 //? if <1.19 {
@@ -69,7 +69,7 @@ public class WindowHelper {
     }
 
     public static boolean setWindowID() {
-        if(!MinecraftClient.getInstance().isWindowFocused()) return false;
+        if(!Minecraft.getInstance().isWindowActive()) return false;
         String[] command = new String[]{"kdotool", "getactivewindow", "getwindowgeometry"};
 
         ProcessBuilder builder = new ProcessBuilder(command);

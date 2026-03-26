@@ -12,9 +12,9 @@ import net.notcoded.wayfix.config.ModClothConfig;
 import net.notcoded.wayfix.platforms.ModPlatform;
 
 //? if >=1.20.1 {
-import net.minecraft.network.chat.Component;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.text.Text;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.toast.SystemToast;
 import net.minecraftforge.fml.loading.FMLConfig;
 //?}
 //? if >=1.19 {
@@ -41,9 +41,9 @@ public class WayFixForge {
             if(!FMLConfig.getBoolConfigValue(FMLConfig.ConfigValue.EARLY_WINDOW_CONTROL)) return;
             FMLConfig.updateConfig(FMLConfig.ConfigValue.EARLY_WINDOW_CONTROL, false);
 
-            Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP,
-                    Component.translatable("wayfix.toast.restart-game.title"),
-                    Component.translatable("wayfix.toast.restart-game.description"))
+            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                    Text.translatable("wayfix.toast.restart-game.title"),
+                    Text.translatable("wayfix.toast.restart-game.description"))
             );
         } catch(Exception | Error ignored) { }
 

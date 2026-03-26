@@ -1,9 +1,9 @@
 package net.notcoded.wayfix.mixin;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.toast.SystemToast;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.network.chat.Component;
 import net.notcoded.wayfix.WayFix;
 import net.notcoded.wayfix.util.DesktopFileInjector;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,11 +1,11 @@
 package net.notcoded.wayfix.mixin;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.RunArgs;
-import net.minecraft.client.toast.SystemToast;
-import net.minecraft.client.util.Window;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.main.GameConfig;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import com.mojang.blaze3d.platform.Window;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import net.notcoded.wayfix.WayFix;
 import net.notcoded.wayfix.util.DesktopFileInjector;
 import org.lwjgl.glfw.GLFW;
@@ -43,16 +43,16 @@ import static net.notcoded.wayfix.WayFix.supportsWayland;
 /*import net.notcoded.wayfix.platforms.neoforge.WayFixNeoForge;
 *///?}
 
-@Mixin(MinecraftClient.class)
-public abstract class MinecraftClientMixin {
-    @Redirect(method = "onResolutionChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;calculateScaleFactor(IZ)I"))
+@Mixin(Minecraft.class)
+public abstract class MinecraftMixin {
+    @Redirect(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;calculateScale(IZ)I"))
     private int fixHiDPIScaling(Window instance, int guiScale, boolean forceUnicodeFont) {
         // "Auto" or Gui Scale 0 already auto-scales it
         if (guiScale != 0 && WayFix.config.autoScaleGUI) {
             guiScale = Math.round(guiScale * wayfix$getScaleFactor(instance));
         }
 
-        return instance.calculateScaleFactor(guiScale, forceUnicodeFont);
+        return instance.calculateScale(guiScale, forceUnicodeFont);
     }
 
     //? if forge {
@@ -77,7 +77,7 @@ public abstract class MinecraftClientMixin {
     @Unique
     private float wayfix$getScaleFactor(Window instance) {
         float[] pos = new float[1];
-        GLFW.glfwGetWindowContentScale(instance.getHandle(), pos, pos);
+        GLFW.glfwGetWindowContentScale(instance.getWindow(), pos, pos);
 
         return pos[0]; // using x or y doesn't matter
     }

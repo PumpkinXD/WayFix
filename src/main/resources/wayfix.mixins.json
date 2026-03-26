@@ -5,10 +5,10 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "GLXMixin",
-    "MinecraftClientMixin",
+    "MinecraftMixin",
     "MonitorFixWindowMixin",
-    "MonitorTrackerMixin",
-    "KeyboardMixin",
+    "ScreenManagerMixin",
+    "KeyboardHandlerMixin",
     "TitleScreenMixin",
     "WindowMixin"
   ],

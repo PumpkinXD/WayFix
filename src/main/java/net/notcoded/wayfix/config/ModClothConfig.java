@@ -8,8 +8,8 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.DropdownMenuBuilder;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.notcoded.wayfix.WayFix;
 import net.notcoded.wayfix.util.WindowHelper;
 
@@ -94,9 +94,9 @@ public class ModClothConfig extends ModConfig implements ConfigData {
         return builder.build();
     }
 
-    private static Text getText(String key) {
+    private static Component getText(String key) {
         //? if >=1.19 {
-        return Text.translatable("wayfix.option." + key);
+        return Component.translatable("wayfix.option." + key);
          //?} elif <1.19 {
         /*return new TranslatableText("wayfix.option." + key);
         *///?}

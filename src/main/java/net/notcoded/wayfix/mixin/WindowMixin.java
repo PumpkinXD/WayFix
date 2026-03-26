@@ -1,8 +1,8 @@
 package net.notcoded.wayfix.mixin;
 
-import net.minecraft.client.util.Monitor;
-import net.minecraft.client.util.MonitorTracker;
-import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.platform.Monitor;
+import com.mojang.blaze3d.platform.ScreenManager;
+import com.mojang.blaze3d.platform.Window;
 import net.notcoded.wayfix.WayFix;
 import net.notcoded.wayfix.config.ModClothConfig;
 import net.notcoded.wayfix.util.DesktopFileInjector;
@@ -23,8 +23,8 @@ import static net.notcoded.wayfix.WayFix.isWayland;
 
 //? if >=1.20 {
 
-import net.minecraft.client.util.Icons;
-import net.minecraft.resource.ResourcePack;
+import com.mojang.blaze3d.platform.IconSet;
+import net.minecraft.server.packs.PackResources;
 import java.io.IOException;
 //?} elif 1.19.3 {
 /*import java.util.ArrayList;
@@ -66,7 +66,7 @@ public abstract class WindowMixin {
     @Inject(method = "setIcon", at = @At("HEAD"), cancellable = true)
     //? if >=1.20 {
     
-    private void injectIcon(ResourcePack resourcePack, Icons icons, CallbackInfo ci) {
+    private void injectIcon(PackResources resourcePack, IconSet icons, CallbackInfo ci) {
     //?} elif 1.19.3 {
     /*private void injectIcon(InputSupplier<InputStream> smallIconSupplier, InputSupplier<InputStream> bigIconSupplier, CallbackInfo ci) {
     *///?} elif <1.19.3 {
@@ -76,7 +76,7 @@ public abstract class WindowMixin {
         if (isWayland()) {
             //? if >=1.20 {
             try {
-                DesktopFileInjector.setIcon(icons.getIcons(resourcePack));
+                DesktopFileInjector.setIcon(icons.getStandardIcons(resourcePack));
             } catch (IOException ignored) { }
             //?} elif 1.19.3 {
             /*DesktopFileInjector.setIcon(new ArrayList<>(Arrays.asList(smallIconSupplier, bigIconSupplier)));

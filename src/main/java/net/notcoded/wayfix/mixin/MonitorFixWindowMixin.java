@@ -1,8 +1,8 @@
 package net.notcoded.wayfix.mixin;
 
-import net.minecraft.client.util.Monitor;
-import net.minecraft.client.util.MonitorTracker;
-import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.platform.Monitor;
+import com.mojang.blaze3d.platform.ScreenManager;
+import com.mojang.blaze3d.platform.Window;
 import net.notcoded.wayfix.WayFix;
 import net.notcoded.wayfix.config.ModClothConfig;
 import net.notcoded.wayfix.util.WindowHelper;
@@ -22,17 +22,17 @@ import java.util.Collections;
 @Mixin(Window.class)
 public abstract class MonitorFixWindowMixin {
 
-    @Shadow protected abstract void onWindowPosChanged(long window, int x, int y);
+    @Shadow protected abstract void onMove(long window, int x, int y);
 
-    @Shadow @Final private long handle;
+    @Shadow @Final private long window;
 
-    @Redirect(method = "updateWindowRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/MonitorTracker;getMonitor(Lnet/minecraft/client/util/Window;)Lnet/minecraft/client/util/Monitor;"))
-    private Monitor fixWrongMonitor(MonitorTracker instance, Window window) {
-        return WindowHelper.canUseWindowHelper() ? instance.getMonitor(window) : wayfix$getMonitor(instance);
+    @Redirect(method = "setMode", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/ScreenManager;findBestMonitor(Lcom/mojang/blaze3d/platform/Window;)Lcom/mojang/blaze3d/platform/Monitor;"))
+    private Monitor fixWrongMonitor(ScreenManager instance, Window window) {
+        return WindowHelper.canUseWindowHelper() ? instance.findBestMonitor(window) : wayfix$getMonitor(instance);
     }
 
     @Unique
-    private Monitor wayfix$getMonitor(MonitorTracker instance) {
+    private Monitor wayfix$getMonitor(ScreenManager instance) {
         String monitorName = WayFix.config.monitorName;
         long monitorID = GLFW.glfwGetPrimaryMonitor();
         if(!monitorName.trim().isEmpty()) {
@@ -63,13 +63,13 @@ public abstract class MonitorFixWindowMixin {
 
 
     // KDE Plasma ONLY
-    @Inject(method = "updateWindowRegion", at = @At("HEAD"))
+    @Inject(method = "setMode", at = @At("HEAD"))
     private void fixWrongMonitor(CallbackInfo ci) {
         if(!WindowHelper.canUseWindowHelper()) return;
 
         int[] pos = WindowHelper.getWindowPos();
         if(pos == null) return;
 
-        onWindowPosChanged(this.handle, pos[0], pos[1]);
+        onMove(this.window, pos[0], pos[1]);
     }
 }

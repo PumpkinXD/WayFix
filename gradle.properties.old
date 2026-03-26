@@ -13,16 +13,15 @@ mod.id=wayfix
 mod.name=WayFix
 
 # Used for the mod metadata
-mod.mc_dep_fabric=[VERSIONED]
-mod.mc_dep_forgelike=[VERSIONED]
+mod.mc_dep=[VERSIONED]
 # Used for the release title. I.e. '1.20.x'
-mod.mc_title=[VERSIONED]
+mod.version_name=[VERSIONED]
 # Space separated versions for publishing. I.e. '1.20, 1.20.1'
 mod.mc_targets=[VERSIONED]
 
 # Mod setup
 deps.mixin_extras=0.4.1
-deps.fabric_loader=0.18.3
+deps.fabric_loader=0.14.20
 deps.fabric_version=[VERSIONED]
 
 deps.forge_loader=[VERSIONED]
@@ -31,8 +30,6 @@ deps.neoforge_patch=[VERSIONED]
 
 # Mod dependencies
 deps.yarn_build=[VERSIONED]
-deps.modmenu_version=[VERSIONED]
-
-# Publishing
-publish.modrinth=
-publish.curseforge=
+deps.mod_menu_version=[VERSIONED]
+deps.cloth_config_version=[VERSIONED]
+deps.java=[VERSIONED]

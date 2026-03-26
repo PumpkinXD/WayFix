@@ -1,10 +1,10 @@
 package net.notcoded.wayfix.util;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 //? if >=1.19.3 {
 
-import net.minecraft.resource.InputSupplier;
+import net.minecraft.server.packs.resources.IoSupplier;
 import java.util.List;
 //?} elif <1.19.3 {
 /*import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class DesktopFileInjector {
         try (InputStream stream = DesktopFileInjector.class.getResourceAsStream(RESOURCE_LOCATION)) {
             Path location = getDesktopFileLocation();
 
-            String version = MinecraftClient.getInstance().getGameVersion();
+            String version = Minecraft.getInstance().getLaunchedVersion();
             injectFile(location, String.format(IOUtils.toString(Objects.requireNonNull(stream), StandardCharsets.UTF_8),
                     version, ICON_NAME.substring(0, ICON_NAME.lastIndexOf("."))).getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
@@ -52,9 +52,9 @@ public class DesktopFileInjector {
     }
 
     //? if >=1.19.3 {
-    public static void setIcon(List<InputSupplier<InputStream>> icons) {
+    public static void setIcon(List<IoSupplier<InputStream>> icons) {
         if(!WayFix.config.injectIcon) return;
-        for (InputSupplier<InputStream> supplier : icons) {
+        for (IoSupplier<InputStream> supplier : icons) {
             try {
                 BufferedImage image = ImageIO.read(supplier.get());
                 Path target = getIconFileLocation(image.getWidth(), image.getHeight());
